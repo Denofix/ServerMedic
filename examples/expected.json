@@ -1,0 +1,31 @@
+{
+  "note": "Expected observations, not canned production model responses. Model wording may vary. All examples use the normal upload endpoints.",
+  "postgres": {
+    "observation": "Connection to PostgreSQL is refused and application startup aborts.",
+    "evidence_lines": [4, 5, 7, 8],
+    "possible_cause": "PostgreSQL may not be listening or reachable at the configured address; credentials are not proven wrong by ECONNREFUSED.",
+    "missing_context": ["Database health", "Network topology", "Runtime configuration"],
+    "redacted_lines": [2]
+  },
+  "missing-env": {
+    "observation": "APP_SECRET is not set and application startup aborts.",
+    "evidence_lines": [3, 4, 5],
+    "possible_cause": "The required variable may not have been passed into this process.",
+    "missing_context": ["Environment injection configuration"],
+    "redacted_lines": []
+  },
+  "port-in-use": {
+    "observation": "The HTTP server fails to bind 0.0.0.0:8000 with address already in use.",
+    "evidence_lines": [4, 5, 6],
+    "possible_cause": "Another process may already own the port.",
+    "missing_context": ["Process/listener inventory", "Port mapping configuration"],
+    "redacted_lines": []
+  },
+  "healthy": {
+    "observation": "Configuration, database, migrations, listener and health request succeed in this sample.",
+    "evidence_lines": [1, 2, 4, 5, 6],
+    "expected_findings": 0,
+    "missing_context": ["A startup excerpt cannot prove long-term system health"],
+    "redacted_lines": []
+  }
+}

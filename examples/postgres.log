@@ -1,0 +1,8 @@
+2026-11-06T09:00:00Z INFO ServerMedic sample service starting
+2026-11-06T09:00:00Z INFO DATABASE_URL=postgresql://app:synthetic-password@db:5432/servermedic
+
+2026-11-06T09:00:01Z ERROR connect ECONNREFUSED 172.18.0.2:5432
+2026-11-06T09:00:01Z ERROR Could not connect to PostgreSQL at db:5432
+2026-11-06T09:00:01Z INFO Retry 1 of 3
+2026-11-06T09:00:02Z ERROR connect ECONNREFUSED 172.18.0.2:5432
+2026-11-06T09:00:03Z FATAL Startup aborted: database unavailable

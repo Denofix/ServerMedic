@@ -1,0 +1,6 @@
+2026-11-06T09:00:00Z INFO Configuration loaded
+2026-11-06T09:00:00Z INFO Starting HTTP listener on 0.0.0.0:8000
+
+2026-11-06T09:00:00Z ERROR [Errno 98] Address already in use
+2026-11-06T09:00:00Z ERROR Failed to bind 0.0.0.0:8000
+2026-11-06T09:00:00Z FATAL HTTP server startup failed

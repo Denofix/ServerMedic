@@ -1,0 +1,6 @@
+2026-11-06T09:00:00Z INFO Configuration validated
+2026-11-06T09:00:00Z INFO PostgreSQL connection established
+
+2026-11-06T09:00:00Z INFO Migrations up to date
+2026-11-06T09:00:01Z INFO HTTP server listening on 0.0.0.0:8000
+2026-11-06T09:00:02Z INFO GET /health 200 OK

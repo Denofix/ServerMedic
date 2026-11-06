@@ -1,0 +1,5 @@
+2026-11-06T09:00:00Z INFO Loading application configuration
+
+2026-11-06T09:00:00Z ERROR Configuration validation failed
+2026-11-06T09:00:00Z ERROR Required environment variable APP_SECRET is not set
+2026-11-06T09:00:00Z FATAL Application startup aborted
