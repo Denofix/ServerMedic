@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   backend:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -31,7 +31,7 @@ jobs:
           LLM_MODEL: ''
 
   frontend-and-browser:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -58,7 +58,7 @@ jobs:
           LLM_MODEL: ''
 
   containers:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - run: docker compose config --quiet
