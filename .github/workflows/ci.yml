@@ -16,6 +16,8 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
+      - name: Verify Vercel dependency mirror
+        run: cmp backend/requirements.txt requirements.txt
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
@@ -29,6 +31,7 @@ jobs:
         env:
           OPENAI_API_KEY: ''
           LLM_MODEL: ''
+      - run: python -m compileall -q scripts/check_public_demo.py
 
   frontend-and-browser:
     runs-on: ubuntu-24.04

@@ -7,11 +7,13 @@ from starlette.datastructures import UploadFile
 from starlette.exceptions import HTTPException
 
 from .config import Settings
+from .demo_access import DemoAccess
 from .documents import MAX_BYTES, prepare_document
 from .errors import AppError
 from .llm import Analyzer, OpenAIAnalyzer
 from .models import Analysis, AnalysisResponse, Document
 from .report import build_report
+from .saved_examples import saved_analysis
 from .service import verify_analysis
 
 EXAMPLES_DIR = Path(__file__).resolve().parents[2] / "examples"
@@ -86,6 +88,7 @@ async def read_document(request: Request) -> Document:
 def create_app(settings: Settings | None = None, analyzer: Analyzer | None = None) -> FastAPI:
     settings = settings if settings is not None else Settings()
     engine = analyzer if analyzer is not None else OpenAIAnalyzer(settings)
+    access = DemoAccess(settings)
     app = FastAPI(title="ServerMedic", version="0.1.0")
     app.add_middleware(BodyLimit)
 
@@ -111,7 +114,9 @@ def create_app(settings: Settings | None = None, analyzer: Analyzer | None = Non
     @app.exception_handler(AppError)
     async def app_error(request: Request, exc: AppError):
         return JSONResponse(
-            status_code=exc.status, content={"error": {"code": exc.code, "message": exc.message}}
+            status_code=exc.status,
+            content={"error": {"code": exc.code, "message": exc.message}},
+            headers=exc.headers,
         )
 
     @app.exception_handler(RequestValidationError)
@@ -125,9 +130,13 @@ def create_app(settings: Settings | None = None, analyzer: Analyzer | None = Non
     async def health():
         return {
             "status": "ok",
-            "analysis_configured": analyzer is not None or settings.configured,
+            "analysis_configured": (analyzer is not None or settings.configured)
+            and (not settings.public_demo or settings.demo_access_configured),
             "provider": engine.provider,
             "model": engine.model,
+            "public_demo": settings.public_demo,
+            "access_required": settings.public_demo,
+            "saved_examples_available": True,
         }
 
     @app.get("/api/examples")
@@ -140,14 +149,32 @@ def create_app(settings: Settings | None = None, analyzer: Analyzer | None = Non
             raise AppError("not_found", "Example not found.", 404)
         return Response((EXAMPLES_DIR / f"{example_id}.log").read_bytes(), media_type="text/plain")
 
+    @app.get("/api/examples/{example_id}/report", response_model=AnalysisResponse)
+    async def saved_report(example_id: str):
+        if example_id not in {item["id"] for item in EXAMPLES}:
+            raise AppError("not_found", "Example not found.", 404)
+        document = prepare_document(
+            f"{example_id}.log", (EXAMPLES_DIR / f"{example_id}.log").read_bytes()
+        )
+        verified = verify_analysis(saved_analysis(example_id), document)
+        return AnalysisResponse(
+            document=document,
+            analysis=verified,
+            markdown=build_report(document, verified, "saved-example", "curated-v1"),
+            provider="saved-example",
+            model="curated-v1",
+        )
+
     @app.post("/api/preview", response_model=Document)
     async def preview(request: Request):
         return await read_document(request)
 
     @app.post("/api/analyze", response_model=AnalysisResponse)
     async def analyze(request: Request):
+        access.authorize(request.headers.get("authorization", ""))
         document = await read_document(request)
-        raw = await engine.analyze(document)
+        async with access.admit():
+            raw = await engine.analyze(document)
         try:
             # Revalidate even injected providers; they must obey the same contract.
             analysis = Analysis.model_validate(raw.model_dump() if isinstance(raw, Analysis) else raw)

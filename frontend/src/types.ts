@@ -33,4 +33,7 @@ export type Health = {
   analysis_configured: boolean;
   provider: string;
   model: string;
+  public_demo?: boolean;
+  access_required?: boolean;
+  saved_examples_available?: boolean;
 };

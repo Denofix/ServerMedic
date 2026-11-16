@@ -6,6 +6,21 @@ ServerMedic is an open source log-analysis workspace for small application logs.
 
 The app suggests diagnostic steps. It does not connect to servers, run commands, repair infrastructure, or prove root causes.
 
+## Hosted demo
+
+**[Open ServerMedic](https://servermedic.vercel.app)**
+
+The hosted version supports masked upload previews, four clearly labelled saved
+example reports, evidence navigation and Markdown export. Live OpenAI analysis
+of an uploaded file requires an owner-provided access code and configured model
+credentials. Saved reports never impersonate live inference or analyze custom files.
+
+Deployment configuration, access policy and the deployed smoke check are described
+in [docs/public-demo.md](docs/public-demo.md). The Vercel Services deployment keeps
+frontend and FastAPI on one origin; Services is currently beta.
+Executed hosted checks and remaining live-inference activation are recorded in
+[the public demo verification report](docs/public-demo-verification.md).
+
 ## Screenshots
 
 ### Evidence-backed analysis
@@ -60,7 +75,7 @@ Stop with `docker compose down`. The default port binds to localhost. Logs and r
 
 Selection sends the file to `/api/preview` without calling a model. Analysis sends that same browser-held `File` to `/api/analyze`, which repeats validation and redaction and completes in a single request. The browser renders only the server's processed text. The backend holds no preview sessions or report history.
 
-The analyzer implements a small `Analyzer` protocol in `backend/app/llm.py`. Tests inject an implementation through `create_app(settings, analyzer=...)`; the production entry point always uses OpenAI. There is no production environment switch silently returning mock diagnoses.
+The analyzer implements a small `Analyzer` protocol in `backend/app/llm.py`. Tests inject an implementation through `create_app(settings, analyzer=...)`; the production live-analysis endpoint always uses OpenAI. A separate, allowlisted saved-example endpoint returns curated references and identifies them in both the UI and Markdown. It is never a fallback for live analysis.
 
 | Location | Contents |
 | --- | --- |
@@ -85,6 +100,10 @@ Copy `.env.example` to `.env` in the repository root. The backend reads it for l
 | `LLM_TIMEOUT_SECONDS` | `60` | Whole call deadline, 1–180 seconds; SDK retries disabled |
 | `LLM_MAX_OUTPUT_TOKENS` | `6000` | Output budget, 256–16,000; incomplete responses are rejected |
 | `WEB_PORT` | `8080` | Local Compose frontend port |
+| `PUBLIC_DEMO` | `true` on Vercel, otherwise `false` | Require a private code for live analysis |
+| `DEMO_ACCESS_CODE` | empty | Private 16–128-character code; missing/short codes disable hosted live analysis |
+| `DEMO_REQUESTS_PER_MINUTE` | `5` | Live admissions per backend process, including failed calls |
+| `DEMO_MAX_CONCURRENT` | `1` | Concurrent live calls per backend process |
 
 Choose a model available to your API project using the [OpenAI model catalog](https://developers.openai.com/api/docs/models) and verify Structured Outputs support. Ensure its context window covers the complete accepted log and output budget. The model/reasoning mode used for developing the project, including GPT‑6.1 Sol Max, is separate from `LLM_MODEL`; this app does not assume an API ID or expose a “Max” setting.
 
@@ -174,7 +193,7 @@ These are synthetic files, containing no real credentials. They pass through the
 - Original and processed contents exist transiently in browser/backend memory. No localStorage, database or application log/report cache is used; refreshing/removing the file clears the UI state. API responses use `Cache-Control: no-store`. Application access logging is disabled in the supplied launch commands. Operating systems, proxies and model providers have their own behavior.
 - Schema and range checks reject invalid references but cannot prove relevance, factual correctness, diagnosis quality or command safety. All causes remain hypotheses and checks require human judgment. Logs are untrusted data; a system instruction separates them from instructions, and no model tools are enabled. Prompt injection is not mechanically eliminated.
 - Only UTF-8 is supported, with optional BOM. ANSI escape sequences/binary controls are rejected. CRLF/CR become LF. Blank and trailing empty lines are counted and preserved. A final newline adds a final empty line; see the exact contract.
-- No accounts, history, database, queue, RAG, Kubernetes, server integrations or automatic fixes. There are no public-service rate limits, auth or multi-user capacity controls. The Compose port binds to localhost; add appropriate controls before exposing a paid API-backed service.
+- No accounts, history, database, queue, RAG, Kubernetes, server integrations or automatic fixes. Hosted live analysis requires a private code and has per-process rate/concurrency controls. These counters reset on cold starts and are separate across replicas; they are not a global spending cap. The Compose port binds to localhost. See [the hosted access policy](docs/public-demo.md) before sharing a paid API-backed deployment.
 - Model access, billing, context limits and latency depend on your configured API project. Retries are explicit user actions. Timeouts, refusals, unavailable API and malformed output produce errors instead of invented results.
 
 ## License
