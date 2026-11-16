@@ -8,7 +8,7 @@ This guide uses **Windows PowerShell**. Run commands one line at a time, without
 
 | Method | Install on your computer | Open in your browser |
 | --- | --- | --- |
-| Hosted demo | Nothing | [servermedic.vercel.app](https://servermedic.vercel.app/) |
+| Hosted demo | Nothing | [servermedic.vercel.app](https://servermedic.flareledger.fun/) |
 | Docker Compose (recommended for local use) | Git, Docker Desktop with Linux containers and Compose v2 or later | [localhost:8080](http://localhost:8080) |
 | Native development | Git, Python 3.12, Node.js 24 with npm | [localhost:5173](http://localhost:5173) |
 

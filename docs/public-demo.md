@@ -1,5 +1,8 @@
 # Hosted demonstration
 
+Public address: **[servermedic.flareledger.fun](https://servermedic.flareledger.fun/)**.
+The [servermedic.vercel.app](https://servermedic.vercel.app/) alias remains available.
+
 The hosted application keeps React + TypeScript + Vite and the production FastAPI
 entrypoint. Vercel Services (currently beta) builds both and exposes one origin.
 The backend owns `/api` and `/api/*`; the frontend owns all other paths. It does
@@ -16,6 +19,14 @@ not use the test-only browser application.
 Saved reports are curated references labelled `saved-example / curated-v1`, with
 an explicit no-inference notice in the UI and exported report. They are never
 returned as a fallback for a failed live request or for an arbitrary upload.
+
+## Custom domain
+
+`servermedic.flareledger.fun` is attached to the ServerMedic project as a verified
+production domain. The apex `flareledger.fun` serves the separate FlareLedger
+project. Both use Vercel DNS; the ServerMedic hostname resolves through the
+existing wildcard routing. HTTPS and the same-origin `/api` routes were checked
+on the custom hostname. No apex reassignment or nameserver migration was needed.
 
 ## Owner setup in Vercel
 
@@ -70,7 +81,7 @@ to their policies; application `no-store` headers do not override those policies
 From a checked-out repository, run the no-inference smoke check:
 
 ```bash
-python scripts/check_public_demo.py https://YOUR-DEPLOYMENT.vercel.app
+python scripts/check_public_demo.py https://servermedic.flareledger.fun
 ```
 
 It checks the frontend, deep-link fallback, same-origin JSON API, original blank
@@ -81,7 +92,7 @@ After configuring live credentials, enter the access code without echoing it:
 ```bash
 read -rs -p 'Demo access code: ' DEMO_ACCESS_CODE
 export DEMO_ACCESS_CODE
-python scripts/check_public_demo.py https://YOUR-DEPLOYMENT.vercel.app --live
+python scripts/check_public_demo.py https://servermedic.flareledger.fun --live
 unset DEMO_ACCESS_CODE
 ```
 

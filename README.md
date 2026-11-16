@@ -8,7 +8,9 @@ The app suggests diagnostic steps. It does not connect to servers, run commands,
 
 ## Hosted demo
 
-**[Open ServerMedic](https://servermedic.vercel.app)**
+**[Open ServerMedic](https://servermedic.flareledger.fun)**
+
+Fallback address: [servermedic.vercel.app](https://servermedic.vercel.app/).
 
 The hosted version supports masked upload previews, four clearly labelled saved
 example reports, evidence navigation and Markdown export. Live OpenAI analysis
