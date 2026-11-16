@@ -21,6 +21,20 @@ frontend and FastAPI on one origin; Services is currently beta.
 Executed hosted checks and remaining live-inference activation are recorded in
 [the public demo verification report](docs/public-demo-verification.md).
 
+## Installation and user guides
+
+Choose the guide for your operating system. Each covers Docker Compose, native
+setup, backend configuration, saved examples, live analysis, Markdown export,
+updates and troubleshooting:
+
+- **[Windows — PowerShell installation and usage](docs/install-windows.md)**
+- **[Linux — installation and usage](docs/install-linux.md)**
+
+To explore without installing anything or providing an API key, open the hosted
+demo, select a sample, and click **Open saved example report**. Live analysis
+requires configured OpenAI API credentials; the hosted demo also requires an
+owner-provided access code.
+
 ## Screenshots
 
 ### Evidence-backed analysis
