@@ -224,3 +224,37 @@ test("public demo sends its access code only on live analysis and forgets it on 
   await page.reload();
   await expect(page.getByLabel("Live analysis access code")).toHaveValue("");
 });
+
+test("key-free public demo keeps live analysis disabled while saved reports work", async ({ page }) => {
+  await page.route("**/api/health", (route) => route.fulfill({
+    json: {
+      status: "ok", provider: "openai", model: "", analysis_configured: false,
+      public_demo: true, access_required: true, saved_examples_available: true,
+    },
+  }));
+  let modelRequests = 0;
+  page.on("request", (request) => {
+    if (new URL(request.url()).pathname === "/api/analyze") modelRequests++;
+  });
+  await page.goto("/");
+  await expect(page.getByRole("link", { name: "Windows setup" })).toHaveAttribute(
+    "href", "https://github.com/Denofix/ServerMedic/blob/main/docs/install-windows.md",
+  );
+  await expect(page.getByRole("link", { name: "Linux setup" })).toHaveAttribute(
+    "href", "https://github.com/Denofix/ServerMedic/blob/main/docs/install-linux.md",
+  );
+  await expect(page.getByLabel("Live analysis access code")).toHaveCount(0);
+  await page.getByRole("button", { name: "Load PostgreSQL connection sample" }).click();
+  const analyzeButton = page.getByRole("button", { name: "Analyze log", exact: true });
+  await expect(analyzeButton).toBeDisabled();
+  await page.getByRole("button", { name: "Open saved example report" }).click();
+  await expect(page.getByText(/No AI model was called to open it/)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Download Markdown" })).toBeEnabled();
+  await page.getByLabel("Upload log file").setInputFiles({
+    name: "my-own.log", mimeType: "text/plain", buffer: Buffer.from("password=synthetic-secret\nERROR custom"),
+  });
+  await expect(page.getByTestId("log-line-1")).toContainText("[REDACTED]");
+  await expect(page.getByRole("button", { name: "Open saved example report" })).toHaveCount(0);
+  await expect(analyzeButton).toBeDisabled();
+  expect(modelRequests).toBe(0);
+});

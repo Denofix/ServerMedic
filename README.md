@@ -12,15 +12,19 @@ The app suggests diagnostic steps. It does not connect to servers, run commands,
 
 Fallback address: [servermedic.vercel.app](https://servermedic.vercel.app/).
 
-The hosted version supports masked upload previews, four clearly labelled saved
-example reports, evidence navigation and Markdown export. Live OpenAI analysis
-of an uploaded file requires an owner-provided access code and configured model
-credentials. Saved reports never impersonate live inference or analyze custom files.
+The public demo provides masked upload previews, four clearly labelled saved
+example reports, evidence navigation and Markdown export. It runs without an
+owner-funded OpenAI API key and does not offer live model inference.
+
+For live AI analysis of your own logs, run ServerMedic locally and add **your own**
+OpenAI API key and model ID to the local backend's `.env`. The public website
+does not ask for or receive your API key. Saved reports never impersonate live
+inference or analyze custom files.
 
 Deployment configuration, access policy and the deployed smoke check are described
 in [docs/public-demo.md](docs/public-demo.md). The Vercel Services deployment keeps
 frontend and FastAPI on one origin; Services is currently beta.
-Executed hosted checks and remaining live-inference activation are recorded in
+The chosen demo policy and executed hosted checks are recorded in
 [the public demo verification report](docs/public-demo-verification.md).
 
 ## Installation and user guides
@@ -33,9 +37,9 @@ updates and troubleshooting:
 - **[Linux — installation and usage](docs/install-linux.md)**
 
 To explore without installing anything or providing an API key, open the hosted
-demo, select a sample, and click **Open saved example report**. Live analysis
-requires configured OpenAI API credentials; the hosted demo also requires an
-owner-provided access code.
+demo, select a sample, and click **Open saved example report**. For live analysis,
+follow the Windows or Linux guide and configure your own API credentials on your
+local backend.
 
 ## Screenshots
 
@@ -49,7 +53,7 @@ owner-provided access code.
 
 ## Quick start with Docker Compose
 
-Requirements: Docker Engine/Desktop with Docker Compose v2 or later. You need an OpenAI API key and an API model with Responses API + Structured Outputs support for AI analysis. Preview works without either.
+Requirements: Docker Engine/Desktop with Docker Compose v2 or later. You need an OpenAI API key and an API model with Responses API + Structured Outputs support for AI analysis. Preview and saved example reports work without either.
 
 From the repository root:
 
@@ -209,7 +213,7 @@ These are synthetic files, containing no real credentials. They pass through the
 - Original and processed contents exist transiently in browser/backend memory. No localStorage, database or application log/report cache is used; refreshing/removing the file clears the UI state. API responses use `Cache-Control: no-store`. Application access logging is disabled in the supplied launch commands. Operating systems, proxies and model providers have their own behavior.
 - Schema and range checks reject invalid references but cannot prove relevance, factual correctness, diagnosis quality or command safety. All causes remain hypotheses and checks require human judgment. Logs are untrusted data; a system instruction separates them from instructions, and no model tools are enabled. Prompt injection is not mechanically eliminated.
 - Only UTF-8 is supported, with optional BOM. ANSI escape sequences/binary controls are rejected. CRLF/CR become LF. Blank and trailing empty lines are counted and preserved. A final newline adds a final empty line; see the exact contract.
-- No accounts, history, database, queue, RAG, Kubernetes, server integrations or automatic fixes. Hosted live analysis requires a private code and has per-process rate/concurrency controls. These counters reset on cold starts and are separate across replicas; they are not a global spending cap. The Compose port binds to localhost. See [the hosted access policy](docs/public-demo.md) before sharing a paid API-backed deployment.
+- No accounts, history, database, queue, RAG, Kubernetes, server integrations or automatic fixes. The published demo has no OpenAI API key; live analysis is available in each user's configured local installation. Optional private hosted inference requires a private code and has per-process rate/concurrency controls. These counters reset on cold starts and are separate across replicas; they are not a global spending cap. The Compose port binds to localhost. See [the hosted access policy](docs/public-demo.md) before sharing a paid API-backed deployment.
 - Model access, billing, context limits and latency depend on your configured API project. Retries are explicit user actions. Timeouts, refusals, unavailable API and malformed output produce errors instead of invented results.
 
 ## License

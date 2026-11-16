@@ -8,11 +8,11 @@ This guide uses **Windows PowerShell**. Run commands one line at a time, without
 
 | Method | Install on your computer | Open in your browser |
 | --- | --- | --- |
-| Hosted demo | Nothing | [servermedic.vercel.app](https://servermedic.flareledger.fun/) |
+| Hosted demo | Nothing | [servermedic.flareledger.fun](https://servermedic.flareledger.fun/) |
 | Docker Compose (recommended for local use) | Git, Docker Desktop with Linux containers and Compose v2 or later | [localhost:8080](http://localhost:8080) |
 | Native development | Git, Python 3.12, Node.js 24 with npm | [localhost:5173](http://localhost:5173) |
 
-The hosted demo and local app both offer four **saved example reports** without an OpenAI key. Previewing your own file also needs no key. **Analyze log** makes a live OpenAI request and requires server-side credentials; the hosted demo additionally requires an access code from its owner. Each live request can incur API charges.
+The public demo offers four **saved example reports** and masked previews without an OpenAI key. It does not offer live model inference. For **Analyze log**, run ServerMedic locally and put your own OpenAI API key and model ID in the local backend's `.env`. The key is not entered into or sent to the public website. Each local live request can incur charges to your API account.
 
 ## 1. Install prerequisites
 
@@ -162,7 +162,7 @@ After changing `.env`, stop terminal 1 with **Ctrl+C**, repeat its backend comma
 1. Use **browse files** or drag one file into the upload area.
 2. Supply one UTF-8 `.log` or `.txt` file, at most **65,536 bytes** and **500 lines**, including blank lines. A final newline counts as an additional empty line. Export Windows Event Viewer `.evtx` data to a relevant plain-text extract first; `.evtx` files cannot be uploaded directly.
 3. Review **Processed log** before analysis. Selection already uploads the raw file to the backend for masking. Common secrets become `[REDACTED]`, but masking can miss sensitive values.
-4. For your local installation, configure the API key and model on the backend. On the hosted demo, enter the owner's code into **Live analysis access code** when live analysis is available. The code is separate from the OpenAI API key; visitors do not enter an API key in the page.
+4. To use AI, open your **local** ServerMedic address and configure your own `OPENAI_API_KEY` and `LLM_MODEL` in its root `.env`, as in section 3. Keep `PUBLIC_DEMO=false`, restart the local backend, and reload the page. The public website accepts no API key and provides preview and saved examples only.
 5. Click **Analyze log**, wait for the result, inspect its evidence and export Markdown. Each explicit retry can make another paid API request.
 
 The saved-report button is available only for bundled examples, not for arbitrary uploaded files. There is no saved-report fallback when live analysis fails. A result saying **No problems identified** applies to the supplied sample and does not establish that the whole system is healthy.
@@ -208,7 +208,7 @@ Then rebuild/start Docker as in section 4. For the native method, repeat the `pi
 | `npm.ps1` or `Activate.ps1` is blocked | Use the guide's `npm.cmd` and explicit `.venv\Scripts\python.exe` commands; neither needs an execution-policy change. |
 | Backend unavailable / samples do not load | Check Compose health/logs, or keep both native terminals running. Open the frontend port, then reload the page. |
 | Live analysis is unavailable / `not_configured` | Set both key and model in the root `.env`, check that it is not `.env.txt`, restart/recreate the backend and reload. Shell variables override `.env`. |
-| 401 / `demo_access_required` | Enter the current owner-provided code. Reloading clears it. A local install with `PUBLIC_DEMO=false` does not require a code. |
+| 401 / `demo_access_required` | For the local workflow, keep `PUBLIC_DEMO=false` and restart the backend. The published demo deliberately does not offer live analysis. |
 | 429 / `demo_busy` or `demo_rate_limited` | Wait for the active call to finish or the rate window to expire; avoid repeated clicks. |
 | 503 / `llm_auth`, `llm_configuration` or `llm_rate_limit` | Check the backend API key, exact model ID, model access, API quota and billing. A successful health check does not validate these. |
 | 504 / `llm_timeout`, or 502 / `invalid_result` | Review the log, model support and timeout/output budgets before retrying. No substitute result is fabricated. |

@@ -666,6 +666,18 @@ code {
   margin: 0 0 18px;
   font-size: 11px;
 }
+.public-demo-notice {
+  align-items: flex-start;
+  background: #eff8f4;
+  border-color: #d0e5dc;
+  color: #476b60;
+}
+.public-demo-notice a {
+  color: var(--teal);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 .test-notice {
   background: #f0f4fc;
   border-color: #d7e0f0;
