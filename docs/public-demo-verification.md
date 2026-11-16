@@ -17,6 +17,33 @@ UI links to those guides when live inference is not configured. Optional private
 hosted inference remains a separate operator choice described in
 [public-demo.md](public-demo.md). No hosted live-inference success is claimed.
 
+## Published mode verified — 2026-11-17
+
+Production deployment: `dpl_5k78GjUgTJAubFHnYef3X7jRLX9r`.
+Application source: `eb1e846ae372be5cf6cd98ee5ffd13e2cfb91d35`.
+The deployment was created from the Git revision on the existing Vercel project;
+that operation did not link the project for automatic Git deployments.
+
+| Check on the production custom hostname | Result |
+| --- | --- |
+| Health and credential metadata | Public mode, live analysis not configured, no OpenAI API key present |
+| Public HTTP smoke | Exited 0; frontend, SPA, API, masking, reports, evidence and denial passed |
+| Published policy notice and Windows/Linux setup links | Passed in Chromium |
+| All four saved reports | Passed; labelled curated results with exact extracted evidence |
+| Evidence navigation | Original line 4 received focus/highlight |
+| Markdown download | Downloaded UTF-8 contents matched the server report and contained no synthetic password |
+| Custom synthetic upload | Secret masked, blank line preserved, saved-report action absent, live action disabled |
+| Narrow viewport and page errors | No horizontal overflow at 390px; no page errors |
+| Requests to live analysis from the normal UI flow | Zero |
+| Separate anonymous inference probe | Controlled denial before any model call |
+
+The browser check used the pinned Playwright Chromium build with
+`PLAYWRIGHT_HOST_PLATFORM_OVERRIDE=ubuntu24.04-x64` in an ephemeral Ubuntu 26.04
+verification environment. That environment was stopped after the checks.
+The standard [GitHub CI run](https://github.com/Denofix/ServerMedic/actions/runs/43972010791)
+also passed backend, frontend/browser and container jobs for `eb1e846` on its
+normal hosted runner. No provider key was added and no model call was made.
+
 ## Executed custom-domain HTTP check — 2026-11-16
 
 | Check | Result |
