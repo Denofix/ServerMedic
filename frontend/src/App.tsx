@@ -541,23 +541,47 @@ export default function App() {
             </div>
           )}
           {health?.public_demo && (
-            <div className="notice">
+            <div className="notice public-demo-notice">
               <ShieldCheck size={17} />
               <span>
-                Explore four saved example reports without an account.
-                Live AI analysis uses an owner-provided access code.
-                Previewed files are processed on the server; live analysis sends
-                the masked log to OpenAI. Do not upload confidential logs.
+                Explore four saved example reports without an account.{" "}
+                {health.analysis_configured ? (
+                  "Live AI analysis uses an owner-provided access code."
+                ) : (
+                  <>
+                    To analyze your own log with AI, run ServerMedic locally
+                    using your own OpenAI API key.{" "}
+                    <a
+                      href="https://github.com/Denofix/ServerMedic/blob/main/docs/install-windows.md"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Windows setup
+                    </a>
+                    {" · "}
+                    <a
+                      href="https://github.com/Denofix/ServerMedic/blob/main/docs/install-linux.md"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Linux setup
+                    </a>
+                    .
+                  </>
+                )}{" "}
+                Previewed files are processed on this server.
+                {health.analysis_configured &&
+                  " Live analysis sends the masked log to OpenAI."}{" "}
+                Do not upload confidential logs.
               </span>
             </div>
           )}
-          {health && !health.analysis_configured && (
+          {health && !health.public_demo && !health.analysis_configured && (
             <div className="notice">
               <CircleAlert size={17} />
               <span>
-                {health.public_demo
-                  ? "Live AI analysis is currently unavailable. Preview your log or select a sample and open its saved report."
-                  : "Preview is available. Set OPENAI_API_KEY and LLM_MODEL on the backend to enable AI analysis."}
+                Preview is available. Set OPENAI_API_KEY and LLM_MODEL on the
+                backend to enable AI analysis.
               </span>
             </div>
           )}
