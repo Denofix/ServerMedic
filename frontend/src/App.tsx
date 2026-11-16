@@ -18,7 +18,7 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import { analyze, checked, getExamples, getHealth, preview } from "./api";
+import { analyze, checked, getExamples, getHealth, getSavedReport, preview } from "./api";
 import type {
   AnalysisResponse,
   Example,
@@ -115,9 +115,14 @@ export default function App() {
   const [backendError, setBackendError] = useState(false);
   const [activeLine, setActiveLine] = useState<number | null>(null);
   const [dragging, setDragging] = useState(false);
+  const [selectedExample, setSelectedExample] = useState<string | null>(null);
+  const [accessCode, setAccessCode] = useState("");
+  const [openingSaved, setOpeningSaved] = useState(false);
   const job = useRef<AbortController | null>(null);
   const input = useRef<HTMLInputElement>(null);
   const busy = phase === "preparing" || phase === "analyzing";
+  const liveLocked = !!health?.public_demo &&
+    (!health.analysis_configured || !accessCode.trim());
 
   useEffect(() => {
     let active = true;
@@ -149,6 +154,8 @@ export default function App() {
     setResult(null);
     setError("");
     setActiveLine(null);
+    setSelectedExample(null);
+    setOpeningSaved(false);
     if (input.current) input.current.value = "";
   }
 
@@ -161,6 +168,8 @@ export default function App() {
     setDoc(null);
     setFile(null);
     setActiveLine(null);
+    setSelectedExample(null);
+    setOpeningSaved(false);
     setPhase("preparing");
     return controller;
   }
@@ -207,11 +216,13 @@ export default function App() {
         }),
       );
       const blob = await response.blob();
-      if (!controller.signal.aborted)
+      if (!controller.signal.aborted) {
         await prepareFile(
           new File([blob], `${example.id}.log`, { type: "text/plain" }),
           controller,
         );
+        if (!controller.signal.aborted) setSelectedExample(example.id);
+      }
     } catch (error) {
       if (!controller.signal.aborted) {
         setError(messageFor(error));
@@ -221,7 +232,7 @@ export default function App() {
   }
 
   async function runAnalysis() {
-    if (!file || !doc || busy) return;
+    if (!file || !doc || busy || liveLocked) return;
     job.current?.abort();
     const controller = new AbortController();
     job.current = controller;
@@ -229,10 +240,12 @@ export default function App() {
     setError("");
     setResult(null);
     setActiveLine(null);
+    setOpeningSaved(false);
     try {
       const data = await analyze(
         file,
         AbortSignal.any([controller.signal, AbortSignal.timeout(195000)]),
+        accessCode.trim() || undefined,
       );
       if (!controller.signal.aborted) {
         setDoc(data.document);
@@ -244,6 +257,36 @@ export default function App() {
         setError(messageFor(error));
         setPhase("error");
       }
+    }
+  }
+
+  async function openSavedReport() {
+    if (!selectedExample || busy) return;
+    job.current?.abort();
+    const controller = new AbortController();
+    job.current = controller;
+    setError("");
+    setResult(null);
+    setActiveLine(null);
+    setOpeningSaved(true);
+    setPhase("analyzing");
+    try {
+      const data = await getSavedReport(
+        selectedExample,
+        AbortSignal.any([controller.signal, AbortSignal.timeout(20000)]),
+      );
+      if (!controller.signal.aborted) {
+        setDoc(data.document);
+        setResult(data);
+        setPhase("complete");
+      }
+    } catch (error) {
+      if (!controller.signal.aborted) {
+        setError(messageFor(error));
+        setPhase("error");
+      }
+    } finally {
+      if (!controller.signal.aborted) setOpeningSaved(false);
     }
   }
 
@@ -278,7 +321,7 @@ export default function App() {
         <div className="header-right">
           <span className="open-source">Open source log diagnostics</span>
           <span className="local-badge">
-            <span /> Session only
+            <span /> {health?.public_demo ? "Public demo" : "Session only"}
           </span>
         </div>
       </header>
@@ -355,10 +398,26 @@ export default function App() {
               </button>
             </div>
           )}
+          {health?.access_required && health.analysis_configured && (
+            <div className="demo-access">
+              <label htmlFor="demo-access-code">Live analysis access code</label>
+              <input
+                id="demo-access-code"
+                type="password"
+                value={accessCode}
+                maxLength={128}
+                autoComplete="off"
+                disabled={busy}
+                placeholder="Provided by the project owner"
+                onChange={(event) => setAccessCode(event.target.value)}
+              />
+              <small>Kept in this page only. Saved reports need no code.</small>
+            </div>
+          )}
           <button
             type="button"
             className="analyze-button"
-            disabled={!doc || busy}
+            disabled={!doc || busy || liveLocked}
             onClick={() => void runAnalysis()}
           >
             {busy ? (
@@ -366,7 +425,9 @@ export default function App() {
             ) : (
               <ScanLine size={18} />
             )}
-            {phase === "preparing"
+            {openingSaved
+              ? "Opening saved report…"
+              : phase === "preparing"
               ? "Preparing log…"
               : phase === "analyzing"
                 ? "Analyzing log…"
@@ -380,6 +441,16 @@ export default function App() {
             <h3>Try a sample</h3>
             <span>4</span>
           </div>
+          {selectedExample && health?.saved_examples_available && (
+            <button
+              type="button"
+              className="saved-report-button"
+              disabled={busy}
+              onClick={() => void openSavedReport()}
+            >
+              <FileText size={16} /> Open saved example report
+            </button>
+          )}
           <div className="sample-list">
             {examples.map((example, i) => (
               <button
@@ -460,12 +531,33 @@ export default function App() {
               </span>
             </div>
           )}
+          {result?.provider === "saved-example" && (
+            <div className="notice saved-notice" role="status">
+              <FileText size={17} />
+              <span>
+                Saved example · curated reference report for this bundled log.
+                No AI model was called to open it.
+              </span>
+            </div>
+          )}
+          {health?.public_demo && (
+            <div className="notice">
+              <ShieldCheck size={17} />
+              <span>
+                Explore four saved example reports without an account.
+                Live AI analysis uses an owner-provided access code.
+                Previewed files are processed on the server; live analysis sends
+                the masked log to OpenAI. Do not upload confidential logs.
+              </span>
+            </div>
+          )}
           {health && !health.analysis_configured && (
             <div className="notice">
               <CircleAlert size={17} />
               <span>
-                Preview is available. Set OPENAI_API_KEY and LLM_MODEL on the
-                backend to enable AI analysis.
+                {health.public_demo
+                  ? "Live AI analysis is currently unavailable. Preview your log or select a sample and open its saved report."
+                  : "Preview is available. Set OPENAI_API_KEY and LLM_MODEL on the backend to enable AI analysis."}
               </span>
             </div>
           )}
@@ -613,7 +705,9 @@ export default function App() {
                       <ScanLine size={32} />
                     )}
                     <h3>
-                      {phase === "analyzing"
+                      {openingSaved
+                        ? "Opening the saved example."
+                        : phase === "analyzing"
                         ? "Reading between the lines."
                         : "Your next step starts here."}
                     </h3>

@@ -7,10 +7,19 @@ All paths are relative to the same origin. No CORS setup is required; Vite and N
 | GET | `/api/health` | Liveness and configuration presence; not a real model probe |
 | GET | `/api/examples` | Four sample descriptors |
 | GET | `/api/examples/{id}` | Synthetic UTF-8 log bytes; allowlisted IDs only |
+| GET | `/api/examples/{id}/report` | Labelled curated report for exact bundled log; never calls the model |
 | POST | `/api/preview` | Validate and redact; no model call |
 | POST | `/api/analyze` | Validate, redact, analyze, verify citations, render report |
 
 Both POST endpoints require **exactly one** multipart field named `file`, containing a `.log` or `.txt` file. Additional files/fields are rejected. The original bytes must be at most 65,536. The entire HTTP body is bounded to 72 KiB to allow multipart framing.
+
+Hosted deployments (`PUBLIC_DEMO=true`, the default on Vercel) require
+`Authorization: Bearer <private access code>` for `/api/analyze`. Preview, example
+logs and curated reports remain public. The health response includes
+`public_demo`, `access_required`, `saved_examples_available` and
+`analysis_configured` without returning credentials. Configuration presence does
+not prove model availability. Saved reports have `provider: "saved-example"` and
+`model: "curated-v1"`; they cannot accept custom uploaded contents.
 
 UTF-8 BOM is accepted and stripped. CRLF and CR are normalized to LF. Splitting uses `text.split("\n")`: empty interior and trailing lines retain their original numbers. For example, `a\n\nb\n` produces lines 1–4; a final newline introduces a trailing empty line. Limits include that line. Binary/control characters other than tabs and CR/LF are rejected, including ANSI escape sequences. Input with no non-whitespace content is rejected.
 
@@ -71,8 +80,10 @@ Errors have shape `{"error":{"code":"...","message":"..."}}`. Normal processing 
 | --- | --- |
 | 400 | `invalid_upload`, `invalid_extension`, `invalid_encoding`, `invalid_text`, `empty_file`, `too_many_lines` |
 | 413 | `file_too_large`, `request_too_large` |
+| 401 | `demo_access_required` (hosted live analysis only) |
+| 429 | `demo_rate_limited`, `demo_busy` (`Retry-After` header; per backend process) |
 | 422 | `model_refusal` |
 | 502 | `invalid_result` |
-| 503 | `not_configured`, `llm_auth`, `llm_rate_limit`, `llm_configuration`, `llm_unavailable` |
+| 503 | `demo_unavailable`, `not_configured`, `llm_auth`, `llm_rate_limit`, `llm_configuration`, `llm_unavailable` |
 | 504 | `llm_timeout` |
 | 500 | `internal_error` (generic, no exception details) |

@@ -166,3 +166,61 @@ test("mobile layout stays within viewport", async ({ page }) => {
     ),
   ).toBe(true);
 });
+
+test("saved example reports are labelled, exportable, and do not call live analysis", async ({ page }) => {
+  let modelRequests = 0;
+  page.on("request", (request) => {
+    if (new URL(request.url()).pathname === "/api/analyze") modelRequests++;
+  });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Load PostgreSQL connection sample" }).click();
+  await page.getByRole("button", { name: "Open saved example report" }).click();
+  await expect(page.getByText(/No AI model was called to open it/)).toBeVisible();
+  await expect(page.getByRole("heading", {
+    name: "PostgreSQL connection refused; startup aborted",
+  })).toBeVisible();
+  await page.getByRole("button", { name: "Go to line 7", exact: true }).click();
+  await expect(page.getByTestId("log-line-7")).toHaveClass(/active/);
+  const downloadEvent = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download Markdown" }).click();
+  const content = await readFile((await (await downloadEvent).path())!, "utf8");
+  expect(content).toContain("Saved, curated example report");
+  expect(content).not.toContain("synthetic-password");
+  await page.getByRole("button", { name: "Load Healthy startup sample" }).click();
+  await page.getByRole("button", { name: "Open saved example report" }).click();
+  await expect(page.getByText("No problems identified", { exact: true })).toBeVisible();
+  await page.getByLabel("Upload log file").setInputFiles({
+    name: "my-own.log", mimeType: "text/plain", buffer: Buffer.from("ERROR custom"),
+  });
+  await expect(page.getByRole("button", { name: "Open saved example report" })).toHaveCount(0);
+  expect(modelRequests).toBe(0);
+});
+
+test("public demo sends its access code only on live analysis and forgets it on reload", async ({ page }) => {
+  await page.route("**/api/health", (route) => route.fulfill({
+    json: {
+      status: "ok", provider: "test", model: "fixture-v1", analysis_configured: true,
+      public_demo: true, access_required: true, saved_examples_available: true,
+    },
+  }));
+  const sent: { path: string; authorization: string | undefined }[] = [];
+  page.on("request", (request) => {
+    const path = new URL(request.url()).pathname;
+    if (path.startsWith("/api/")) {
+      sent.push({ path, authorization: request.headers()["authorization"] });
+    }
+  });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Load PostgreSQL connection sample" }).click();
+  const analyzeButton = page.getByRole("button", { name: "Analyze log", exact: true });
+  await expect(analyzeButton).toBeDisabled();
+  await page.getByLabel("Live analysis access code").fill("synthetic-demo-code-for-tests");
+  await expect(analyzeButton).toBeEnabled();
+  await analyzeButton.click();
+  await expect(page.getByRole("heading", { name: "PostgreSQL connection refused" })).toBeVisible();
+  expect(sent.filter((request) => request.authorization)).toEqual([
+    { path: "/api/analyze", authorization: "Bearer synthetic-demo-code-for-tests" },
+  ]);
+  await page.reload();
+  await expect(page.getByLabel("Live analysis access code")).toHaveValue("");
+});

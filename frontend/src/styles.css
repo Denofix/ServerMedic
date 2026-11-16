@@ -1310,6 +1310,50 @@ code {
     font-size: 10px;
   }
 }
+.demo-access {
+  display: grid;
+  gap: 7px;
+  margin: 14px 0;
+}
+.demo-access label {
+  font-size: 12px;
+  font-weight: 600;
+}
+.demo-access input {
+  width: 100%;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  font: inherit;
+  font-size: 12px;
+}
+.demo-access small {
+  color: var(--muted);
+  font-size: 11px;
+}
+.saved-report-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  padding: 11px 8px;
+  margin-top: 10px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: #fff;
+  color: var(--teal);
+  font-size: 12px;
+  font-weight: 600;
+}
+.saved-report-button:hover {
+  background: #edf8f5;
+}
+.saved-notice {
+  background: #edf8f5;
+  color: #186959;
+}
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
